@@ -34,6 +34,7 @@ README.md and DECISIONS.md at the repo root.
 - GSAP animates only transform and opacity in the DOM, never the game loop. The intro starts on window load. Respect prefers-reduced-motion (final state, no decorative motion, gameplay stays). Idle loops (gesture hint, CTA pulse) are calm and stop after about 30 s.
 - Clickout: const clickTag = window.clickTag || 'https://example.com/landing'; each CTA is one <a> with href=clickTag, target="_blank", rel="noopener noreferrer". Replay and mute are <button>.
 - Accessibility: visible :focus-visible outline, Space and Enter also flap, touch targets at least 44 px, alt, aria-label and aria-pressed text only from the words I give (decorative images alt=""), <html lang> and <title> set, canvas has an aria-label, focus moves to the CTA when an endcard opens.
+- Add short JavaScript comments to explain what each part of the code does.
 - Before a new mechanic, explain the concept in 3-5 simple sentences. After each change explain in 3-5 sentences what and why. Ask if something is unclear.
 - If I tell you your output was wrong, say in one sentence what was wrong, so I can note it.
 
