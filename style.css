@@ -27,82 +27,27 @@ body {
 .ad__canvas {
 	display: block;
 	height: 100%;
-	width: 100%;
-}
-
-.screen {
 	inset: 0;
 	position: absolute;
+	width: 100%;
+	z-index: 1;
 }
 
-.screen__layer {
+.ad__logo {
+	height: 640px;
+	left: 0;
+	position: absolute;
+	top: 0;
+	width: 360px;
+	z-index: 2;
+}
+
+.ad__headline {
 	display: block;
-	position: absolute;
-}
-
-.screen__layer--background,
-.screen__layer--texture,
-.screen__layer--border {
-	left: 0;
-	top: 0;
-	height: 640px;
-	width: 360px;
-}
-
-.screen__layer--gut {
-	left: 0;
-	top: 0;
-}
-
-.screen__layer--logo {
-	left: 0;
-	top: 0;
-	height: 640px;
-	width: 360px;
-}
-
-.screen__header {
-	background: #0b1e49;
-	height: 112px;
 	left: 0;
 	position: absolute;
-	top: 58px;
-	width: 360px;
-}
-
-.screen__layer--tutorial {
-	left: 0;
 	top: 0;
 	height: 640px;
 	width: 360px;
-}
-
-.screen__layer--player {
-	left: 60px;
-	top: 260px;
-}
-
-.screen__layer--bac6 {
-	bottom: 288px;
-	left: 100px;
-}
-
-.screen__layer--bac2 {
-	bottom: 240px;
-	right: 64px;
-}
-
-.screen__layer--stress {
-	bottom: 180px;
-	left: 105px;
-}
-
-.screen__layer--txt2 {
-	bottom: 142px;
-	right: 28px;
-}
-
-.screen__layer--gesture {
-	bottom: 94px;
-	left: 149px;
+	z-index: 3;
 }
