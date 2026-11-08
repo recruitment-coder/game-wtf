@@ -19,15 +19,35 @@ const ui = {
       window.visualViewport.addEventListener('resize', resizeStage);
     }
 
-    // Endcards will use this callback in the next stage.
-    const onGameEnd = (result) => {
+    // Stop music and play the sounds for the game result.
+    const onGameEnd = (result, collided) => {
+      gameAudio.stopMusic();
+      if (collided) {
+        gameAudio.playSound('crash');
+      }
+      gameAudio.playSound(result);
       console.log(`Game result: ${result}`);
     };
 
     // Let pointer and keyboard input trigger the same jump.
     game.init(canvas, onGameEnd).then((gameLoop) => {
-      stage.addEventListener('pointerdown', () => {
-        gameLoop.jump();
+      const jump = () => {
+        gameAudio.unlockAudio();
+        if (gameLoop.jump()) {
+          gameAudio.playMusic();
+        }
+      };
+      stage.addEventListener('pointerdown', jump);
+
+      // Pause both the animation and audio while the tab is hidden.
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          gameLoop.pause();
+          gameAudio.suspend();
+        } else {
+          gameAudio.resume();
+          gameLoop.resume();
+        }
       });
 
       window.addEventListener('keydown', (event) => {
@@ -35,6 +55,7 @@ const ui = {
         if (gameLoop.debugMode && (event.code === 'KeyW' || event.code === 'KeyF')) {
           event.preventDefault();
           if (!event.repeat) {
+            gameAudio.unlockAudio();
             gameLoop.forceResult(event.code === 'KeyW' ? 'win' : 'fail');
           }
           return;
@@ -46,7 +67,7 @@ const ui = {
 
         event.preventDefault();
         if (!event.repeat) {
-          gameLoop.jump();
+          jump();
         }
       });
     }).catch((error) => {

@@ -65,6 +65,16 @@ const CONFIG = {
     impulse: -350,
     maxFallSpeed: 420
   },
+  audio: {
+    files: {
+      music: 'assets/music/background_music/Funny Game Loop.mp3',
+      crash: 'assets/music/crash/Cartoon Crash Boing.mp3',
+      fail: 'assets/music/endcard_fail/Fail.mp3',
+      win: 'assets/music/endcard_win/applause.mp3'
+    },
+    volume: 1,
+    mutedVolume: 0
+  },
   hitbox: {
     playerInset: 5,
     obstacleInset: 4

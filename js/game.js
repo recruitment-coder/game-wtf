@@ -44,7 +44,6 @@ const game = {
     let previousFrameTime;
     let animationFrame;
     let runStartedAt = null;
-    let runTimeLogged = false;
 
     const resetGame = () => {
       cancelAnimationFrame(animationFrame);
@@ -55,7 +54,6 @@ const game = {
       previousFrameTime = null;
       animationFrame = undefined;
       runStartedAt = null;
-      runTimeLogged = false;
     };
 
     const drawStartScreen = () => {
@@ -68,7 +66,7 @@ const game = {
       this.drawBorder(context, borderImage);
     };
 
-    const finishGame = (result, time) => {
+    const finishGame = (result, time, collided = false) => {
       if (state !== 'playing') {
         return;
       }
@@ -77,12 +75,9 @@ const game = {
       // Cancel a queued frame when a debug key ends the run.
       cancelAnimationFrame(animationFrame);
       animationFrame = undefined;
-      if (!runTimeLogged) {
-        const runSeconds = runStartedAt === null ? 0 : (time - runStartedAt) / 1000;
-        console.log(`Total run time: ${runSeconds.toFixed(2)} seconds`);
-        runTimeLogged = true;
-      }
-      onGameEnd(state);
+      const runSeconds = runStartedAt === null ? 0 : (time - runStartedAt) / 1000;
+      console.log(`Total run time: ${runSeconds.toFixed(2)} seconds`);
+      onGameEnd(state, collided);
     };
 
     const startGame = () => {
@@ -128,6 +123,7 @@ const game = {
         height: playerHitbox.height
       };
       let result = null;
+      let collided = false;
 
       if (playerBox.y < topLimit || playerBox.y + playerBox.height > bottomLimit) {
         result = 'fail';
@@ -153,6 +149,7 @@ const game = {
 
         if (result === null && overlaps) {
           result = 'fail';
+          collided = true;
         }
       });
 
@@ -181,7 +178,7 @@ const game = {
       }
 
       if (result !== null) {
-        finishGame(result, time);
+        finishGame(result, time, collided);
       } else {
         animationFrame = requestAnimationFrame(drawFrame);
       }
@@ -189,6 +186,7 @@ const game = {
 
     return {
       jump() {
+        const started = state === 'start';
         if (state === 'start') {
           startGame();
         }
@@ -198,6 +196,17 @@ const game = {
 
         playerSpeedY = CONFIG.player.impulse;
         if (animationFrame === undefined) {
+          animationFrame = requestAnimationFrame(drawFrame);
+        }
+        return started;
+      },
+      pause() {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = undefined;
+        previousFrameTime = null;
+      },
+      resume() {
+        if (state === 'playing' && animationFrame === undefined) {
           animationFrame = requestAnimationFrame(drawFrame);
         }
       },
