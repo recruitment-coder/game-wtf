@@ -5,7 +5,9 @@ const CONFIG = {
     height: 640,
     pixelRatio: 2,
     canvasWidth: 720,
-    canvasHeight: 1280
+    canvasHeight: 1280,
+    playfieldTop: 0,
+    playfieldBottom: 640
   },
   // Background strip settings.
   world: {
@@ -41,6 +43,9 @@ const CONFIG = {
     x: 60,
     y: 260,
     width: 42,
-    height: 41
+    height: 41,
+    gravity: 900,
+    impulse: -350,
+    maxFallSpeed: 420
   }
 };
