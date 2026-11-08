@@ -3,8 +3,8 @@ const ui = {
     const stage = document.querySelector('.ad');
     const canvas = stage.querySelector('.ad__canvas');
 
-    // Scale the stage to fit the visible screen without stretching it.
     const resizeStage = () => {
+      // Mobile browser bars can change the visible area without resizing the window.
       const viewport = window.visualViewport;
       const width = viewport ? viewport.width : window.innerWidth;
       const height = viewport ? viewport.height : window.innerHeight;
@@ -19,7 +19,14 @@ const ui = {
       window.visualViewport.addEventListener('resize', resizeStage);
     }
 
-    game.init(canvas);
+    // Start the game only after the world image has loaded and the player taps.
+    game.init(canvas).then((gameLoop) => {
+      stage.addEventListener('pointerdown', () => {
+        gameLoop.start();
+      }, { once: true });
+    }).catch((error) => {
+      console.error('Unable to start the game world.', error);
+    });
   }
 };
 
