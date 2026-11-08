@@ -25,6 +25,8 @@ const game = {
     this.drawBorder(context, borderImage);
 
     let scrollX = 0;
+    let playerY = CONFIG.player.y;
+    let verticalVelocity = 0;
     let previousFrameTime = null;
     let animationFrame;
 
@@ -40,6 +42,22 @@ const game = {
         CONFIG.world.levelLength - CONFIG.stage.width
       );
 
+      verticalVelocity = Math.min(
+        verticalVelocity + CONFIG.player.gravity * secondsSinceLastFrame,
+        CONFIG.player.maxFallSpeed
+      );
+      playerY += verticalVelocity * secondsSinceLastFrame;
+
+      const topLimit = CONFIG.stage.playfieldTop;
+      const bottomLimit = CONFIG.stage.playfieldBottom - CONFIG.player.height;
+      if (playerY < topLimit) {
+        playerY = topLimit;
+        verticalVelocity = 0;
+      } else if (playerY > bottomLimit) {
+        playerY = bottomLimit;
+        verticalVelocity = 0;
+      }
+
       context.clearRect(0, 0, CONFIG.stage.width, CONFIG.stage.height);
       this.drawBackground(context, backgroundImages);
       this.drawWorld(context, worldImage, scrollX);
@@ -47,19 +65,18 @@ const game = {
       context.drawImage(
         playerImage,
         CONFIG.player.x,
-        CONFIG.player.y,
+        playerY,
         CONFIG.player.width,
         CONFIG.player.height
       );
       this.drawBorder(context, borderImage);
 
-      if (scrollX < CONFIG.world.levelLength - CONFIG.stage.width) {
-        animationFrame = requestAnimationFrame(drawFrame);
-      }
+      animationFrame = requestAnimationFrame(drawFrame);
     };
 
     return {
-      start() {
+      jump() {
+        verticalVelocity = CONFIG.player.impulse;
         if (animationFrame === undefined) {
           animationFrame = requestAnimationFrame(drawFrame);
         }

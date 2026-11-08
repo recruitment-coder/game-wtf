@@ -19,11 +19,22 @@ const ui = {
       window.visualViewport.addEventListener('resize', resizeStage);
     }
 
-    // Start the game only after the world image has loaded and the player taps.
+    // Let pointer and keyboard input trigger the same jump.
     game.init(canvas).then((gameLoop) => {
       stage.addEventListener('pointerdown', () => {
-        gameLoop.start();
-      }, { once: true });
+        gameLoop.jump();
+      });
+
+      window.addEventListener('keydown', (event) => {
+        if (event.code !== 'Space' && event.code !== 'Enter') {
+          return;
+        }
+
+        event.preventDefault();
+        if (!event.repeat) {
+          gameLoop.jump();
+        }
+      });
     }).catch((error) => {
       console.error('Unable to start the game world.', error);
     });
