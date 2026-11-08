@@ -43,7 +43,8 @@ const game = {
     let playerSpeedY;
     let previousFrameTime;
     let animationFrame;
-    let runStartedAt = null;
+    let runSeconds;
+    let paused;
 
     const resetGame = () => {
       cancelAnimationFrame(animationFrame);
@@ -53,7 +54,8 @@ const game = {
       playerSpeedY = 0;
       previousFrameTime = null;
       animationFrame = undefined;
-      runStartedAt = null;
+      runSeconds = 0;
+      paused = false;
     };
 
     const drawStartScreen = () => {
@@ -66,7 +68,7 @@ const game = {
       this.drawBorder(context, borderImage);
     };
 
-    const finishGame = (result, time, collided = false) => {
+    const finishGame = (result, collided = false) => {
       if (state !== 'playing') {
         return;
       }
@@ -75,7 +77,6 @@ const game = {
       // Cancel a queued frame when a debug key ends the run.
       cancelAnimationFrame(animationFrame);
       animationFrame = undefined;
-      const runSeconds = runStartedAt === null ? 0 : (time - runStartedAt) / 1000;
       console.log(`Total run time: ${runSeconds.toFixed(2)} seconds`);
       onGameEnd(state, collided);
     };
@@ -89,12 +90,8 @@ const game = {
     drawStartScreen();
 
     const drawFrame = (time) => {
-      if (state !== 'playing') {
+      if (state !== 'playing' || paused) {
         return;
-      }
-
-      if (runStartedAt === null) {
-        runStartedAt = time;
       }
 
       // Limit long frame gaps so a pause doesn't jump the world forward.
@@ -102,6 +99,7 @@ const game = {
         ? 0
         : Math.min((time - previousFrameTime) / 1000, CONFIG.world.maxSecondsPerFrame);
       previousFrameTime = time;
+      runSeconds += secondsSinceLastFrame;
 
       scrollX = Math.min(
         scrollX + CONFIG.world.speed * secondsSinceLastFrame,
@@ -178,7 +176,7 @@ const game = {
       }
 
       if (result !== null) {
-        finishGame(result, time, collided);
+        finishGame(result, collided);
       } else {
         animationFrame = requestAnimationFrame(drawFrame);
       }
@@ -190,6 +188,9 @@ const game = {
         drawStartScreen();
       },
       jump() {
+        if (paused) {
+          return;
+        }
         const started = state === 'start';
         if (state === 'start') {
           startGame();
@@ -205,11 +206,13 @@ const game = {
         return started;
       },
       pause() {
+        paused = true;
         cancelAnimationFrame(animationFrame);
         animationFrame = undefined;
         previousFrameTime = null;
       },
       resume() {
+        paused = false;
         if (state === 'playing' && animationFrame === undefined) {
           animationFrame = requestAnimationFrame(drawFrame);
         }
@@ -221,7 +224,7 @@ const game = {
         if (state === 'start') {
           startGame();
         }
-        finishGame(result, performance.now());
+        finishGame(result);
       },
       debugMode
     };

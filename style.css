@@ -16,6 +16,7 @@ body {
 }
 
 .ad {
+	flex-shrink: 0;
 	height: 640px;
 	overflow: hidden;
 	position: relative;
@@ -84,7 +85,8 @@ body {
 	position: absolute;
 	display: flex;
 	align-items: center;
-	min-height: 44px;
+	min-height: max(44px, calc(44px / var(--scale, 1)));
+	min-width: max(44px, calc(44px / var(--scale, 1)));
 	border: 0;
 	padding: 0;
 	background: transparent;
@@ -117,8 +119,8 @@ body {
 	z-index: 4;
 	top: 7px;
 	right: 4px;
-	min-width: 44px;
-	min-height: 44px;
+	min-width: max(44px, calc(44px / var(--scale, 1)));
+	min-height: max(44px, calc(44px / var(--scale, 1)));
 	border: 0;
 	background: transparent;
 	color: #0b1e49;

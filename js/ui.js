@@ -125,7 +125,7 @@ const ui = {
 
     game.init(canvas, onGameEnd).then((gameLoop) => {
       const jump = () => {
-        if (currentScreen && currentScreen !== startScreen) {
+        if (document.hidden || (currentScreen && currentScreen !== startScreen)) {
           return;
         }
         gameAudio.unlockAudio();
@@ -139,13 +139,18 @@ const ui = {
           jump();
         }
       });
-      stage.querySelector('.screen__replay').addEventListener('click', () => {
+      // Keep the full replay cleanup in one place; the game resets its own state.
+      const resetGame = () => {
         gameAudio.stopMusic();
         gameAudio.stopSounds();
         gameLoop.resetGame();
         showScreen(startScreen);
         canvas.focus({ preventScroll: true });
-      });
+      };
+      stage.querySelector('.screen__replay').addEventListener('click', resetGame);
+      if (document.hidden) {
+        gameLoop.pause();
+      }
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           gameLoop.pause();
