@@ -43,8 +43,7 @@ const CONFIG = {
       { image: 'assets/01_game/bac6.png', x: 100, y: 317, width: 38, height: 35 },
       { image: 'assets/01_game/bac2.png', x: 269.5, y: 330, width: 26.5, height: 70 },
       { image: 'assets/01_game/txt1.png', x: 105, y: 366, width: 23, height: 94 },
-      { image: 'assets/01_game/txt2.png', x: 298, y: 385, width: 34, height: 113 },
-      { image: 'assets/gesture.png', x: 149, y: 450, width: 86.5, height: 96 }
+      { image: 'assets/01_game/txt2.png', x: 298, y: 385, width: 34, height: 113 }
     ],
     header: {
       x: 0,
@@ -64,6 +63,30 @@ const CONFIG = {
     gravity: 900,
     impulse: -350,
     maxFallSpeed: 420
+  },
+  animation: {
+    entranceEase: 'back.out(1.4)',
+    duration: 0.7,
+    stagger: 0.08,
+    entranceY: 18,
+    confettiY: -35,
+    endcard: {
+      bubbleScale: 0.92,
+      pooY: -65,
+      pooDuration: 1.2,
+      pooDelay: 0.15,
+      bacteriaY: -24,
+      bacteriaDelay: 0.25,
+      headlineDelay: 0.45,
+      buttonsDelay: 0.7,
+      idleDelay: 1.5,
+      confettiDuration: 1.4,
+      pooEase: 'bounce.out'
+    },
+    pulseScale: 1.025,
+    pulseDuration: 1,
+    idleSeconds: 30,
+    hintPressScale: 0.92
   },
   audio: {
     files: {

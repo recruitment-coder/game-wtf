@@ -6,6 +6,8 @@ const gameAudio = {
   musicPlayer: null,
   musicRequestNumber: 0,
   muted: false,
+  soundPlayers: [],
+  soundRequestNumber: 0,
 
   unlockAudio() {
     // Create and resume audio directly inside the first user interaction.
@@ -55,15 +57,27 @@ const gameAudio = {
   },
 
   async playSound(name) {
+    const currentRequestNumber = this.soundRequestNumber;
     await this.soundsLoaded;
-    if (!this.loadedSounds[name]) {
+    if (currentRequestNumber !== this.soundRequestNumber || !this.loadedSounds[name]) {
       return;
     }
     const soundPlayer = this.audioContext.createBufferSource();
     soundPlayer.buffer = this.loadedSounds[name];
     soundPlayer.connect(this.mainVolume);
-    soundPlayer.onended = () => soundPlayer.disconnect();
+    this.soundPlayers.push(soundPlayer);
+    soundPlayer.onended = () => {
+      soundPlayer.disconnect();
+      this.soundPlayers = this.soundPlayers.filter((player) => player !== soundPlayer);
+    };
     soundPlayer.start();
+  },
+
+  stopSounds() {
+    // Replay also cancels effects that are still waiting for audio files.
+    this.soundRequestNumber += 1;
+    this.soundPlayers.forEach((player) => player.stop());
+    this.soundPlayers = [];
   },
 
   setMuted(muted) {
