@@ -22,4 +22,6 @@
 
 - Keep supplied assets unchanged; full transparent endcard layers preserve their original placement. No compression was needed because the application and assets fit below 3 MB.
 
+- Match the start-screen reference with individual element sizes and a slight rotation of the yellow bacterium. These decorative elements differ from the standard 50% asset scale; gameplay obstacles use 50% of their source dimensions.
+
 - Use native links for CTAs and buttons for replay and mute. Focus the endcard CTA and preserve 44 px touch targets after scaling for keyboard and touch access.

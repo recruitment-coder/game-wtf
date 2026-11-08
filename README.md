@@ -37,7 +37,6 @@ Open `/index.html?debug=1` to draw player and obstacle hitboxes and playfield bo
 
 ## Next steps
 
-- Refine element sizes and positions against the reference screens and check the result on real mobile browsers.
 - Tune obstacle placement and collision insets through playtesting, especially around tall text obstacles.
 - Consider a longer preparation period and a gentle difficulty increase after checking that the level remains passable.
 
