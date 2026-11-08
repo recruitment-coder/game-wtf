@@ -6,7 +6,7 @@ const CONFIG = {
     pixelRatio: 2,
     canvasWidth: 720,
     canvasHeight: 1280,
-    playfieldTop: 0,
+    playfieldTop: 170,
     playfieldBottom: 640
   },
   // Background strip settings.
@@ -64,5 +64,15 @@ const CONFIG = {
     gravity: 900,
     impulse: -350,
     maxFallSpeed: 420
+  },
+  hitbox: {
+    playerInset: 5,
+    obstacleInset: 4
+  },
+  debug: {
+    playerColor: '#00ff00',
+    obstacleColor: '#ff0000',
+    playfieldColor: '#00ffff',
+    lineWidth: 2
   }
 };

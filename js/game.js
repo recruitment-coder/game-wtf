@@ -1,5 +1,9 @@
 const game = {
-  async init(canvas) {
+  async init(canvas, onGameEnd) {
+    if (typeof onGameEnd !== 'function') {
+      throw new TypeError('A game-end callback is required.');
+    }
+
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Unable to create a 2D canvas context.');
@@ -19,22 +23,81 @@ const game = {
       Promise.all(CONFIG.level.map(({ image }) => this.loadImage(image)))
     ]);
 
-    this.drawBackground(context, backgroundImages);
-    this.drawWorld(context, worldImage, 0);
-    this.drawObstacles(context, obstacleImages, 0);
-    this.drawHeader(context);
-    this.drawStartItems(context, startItemImages, playerImage);
-    this.drawBorder(context, borderImage);
+    const playerHitbox = this.getVisibleHitbox(
+      playerImage,
+      CONFIG.player.width,
+      CONFIG.player.height,
+      CONFIG.hitbox.playerInset
+    );
+    const obstacleHitboxes = obstacleImages.map((image) => this.getVisibleHitbox(
+      image,
+      image.naturalWidth / CONFIG.stage.pixelRatio,
+      image.naturalHeight / CONFIG.stage.pixelRatio,
+      CONFIG.hitbox.obstacleInset
+    ));
+    const debugMode = new URLSearchParams(window.location.search).get('debug') === '1';
 
-    let scrollX = 0;
-    let playerY = CONFIG.player.y;
-    let verticalVelocity = 0;
-    let previousFrameTime = null;
+    let state;
+    let scrollX;
+    let playerY;
+    let playerSpeedY;
+    let previousFrameTime;
     let animationFrame;
     let runStartedAt = null;
     let runTimeLogged = false;
 
+    const resetGame = () => {
+      cancelAnimationFrame(animationFrame);
+      state = 'start';
+      scrollX = 0;
+      playerY = CONFIG.player.y;
+      playerSpeedY = 0;
+      previousFrameTime = null;
+      animationFrame = undefined;
+      runStartedAt = null;
+      runTimeLogged = false;
+    };
+
+    const drawStartScreen = () => {
+      context.clearRect(0, 0, CONFIG.stage.width, CONFIG.stage.height);
+      this.drawBackground(context, backgroundImages);
+      this.drawWorld(context, worldImage, 0);
+      this.drawObstacles(context, obstacleImages, 0);
+      this.drawHeader(context);
+      this.drawStartItems(context, startItemImages, playerImage);
+      this.drawBorder(context, borderImage);
+    };
+
+    const finishGame = (result, time) => {
+      if (state !== 'playing') {
+        return;
+      }
+
+      state = result;
+      // Cancel a queued frame when a debug key ends the run.
+      cancelAnimationFrame(animationFrame);
+      animationFrame = undefined;
+      if (!runTimeLogged) {
+        const runSeconds = runStartedAt === null ? 0 : (time - runStartedAt) / 1000;
+        console.log(`Total run time: ${runSeconds.toFixed(2)} seconds`);
+        runTimeLogged = true;
+      }
+      onGameEnd(state);
+    };
+
+    const startGame = () => {
+      resetGame();
+      state = 'playing';
+    };
+
+    resetGame();
+    drawStartScreen();
+
     const drawFrame = (time) => {
+      if (state !== 'playing') {
+        return;
+      }
+
       if (runStartedAt === null) {
         runStartedAt = time;
       }
@@ -50,31 +113,49 @@ const game = {
         CONFIG.world.levelLength - CONFIG.stage.width
       );
 
-      if (!runTimeLogged && scrollX === CONFIG.world.levelLength - CONFIG.stage.width) {
-        console.log(`Total run time: ${((time - runStartedAt) / 1000).toFixed(2)} seconds`);
-        runTimeLogged = true;
-      }
-
-      verticalVelocity = Math.min(
-        verticalVelocity + CONFIG.player.gravity * secondsSinceLastFrame,
+      playerSpeedY = Math.min(
+        playerSpeedY + CONFIG.player.gravity * secondsSinceLastFrame,
         CONFIG.player.maxFallSpeed
       );
-      playerY += verticalVelocity * secondsSinceLastFrame;
+      playerY += playerSpeedY * secondsSinceLastFrame;
 
       const topLimit = CONFIG.stage.playfieldTop;
-      const bottomLimit = CONFIG.stage.playfieldBottom - CONFIG.player.height;
-      if (playerY < topLimit) {
-        playerY = topLimit;
-        verticalVelocity = 0;
-      } else if (playerY > bottomLimit) {
-        playerY = bottomLimit;
-        verticalVelocity = 0;
+      const bottomLimit = CONFIG.stage.playfieldBottom;
+      const playerBox = {
+        x: CONFIG.player.x + playerHitbox.x,
+        y: playerY + playerHitbox.y,
+        width: playerHitbox.width,
+        height: playerHitbox.height
+      };
+      let result = null;
+
+      if (playerBox.y < topLimit || playerBox.y + playerBox.height > bottomLimit) {
+        result = 'fail';
       }
 
       context.clearRect(0, 0, CONFIG.stage.width, CONFIG.stage.height);
       this.drawBackground(context, backgroundImages);
       this.drawWorld(context, worldImage, scrollX);
       this.drawObstacles(context, obstacleImages, scrollX);
+
+      CONFIG.level.forEach((obstacle, index) => {
+        const hitbox = obstacleHitboxes[index];
+        const obstacleBox = {
+          x: obstacle.worldX - scrollX + hitbox.x,
+          y: obstacle.y + hitbox.y,
+          width: hitbox.width,
+          height: hitbox.height
+        };
+        const overlaps = playerBox.x < obstacleBox.x + obstacleBox.width
+          && playerBox.x + playerBox.width > obstacleBox.x
+          && playerBox.y < obstacleBox.y + obstacleBox.height
+          && playerBox.y + playerBox.height > obstacleBox.y;
+
+        if (result === null && overlaps) {
+          result = 'fail';
+        }
+      });
+
       this.drawHeader(context);
       context.drawImage(
         playerImage,
@@ -85,17 +166,131 @@ const game = {
       );
       this.drawBorder(context, borderImage);
 
-      animationFrame = requestAnimationFrame(drawFrame);
+      if (debugMode) {
+        this.drawDebug(context, playerBox, obstacleHitboxes, scrollX, topLimit, bottomLimit);
+      }
+
+      const levelEnd = CONFIG.world.levelLength - CONFIG.stage.width;
+      const allObstaclesPassed = CONFIG.level.every((obstacle, index) => {
+        const hitbox = obstacleHitboxes[index];
+        return obstacle.worldX - scrollX + hitbox.x + hitbox.width <= playerBox.x;
+      });
+
+      if (result === null && scrollX >= levelEnd && allObstaclesPassed) {
+        result = 'win';
+      }
+
+      if (result !== null) {
+        finishGame(result, time);
+      } else {
+        animationFrame = requestAnimationFrame(drawFrame);
+      }
     };
 
     return {
       jump() {
-        verticalVelocity = CONFIG.player.impulse;
+        if (state === 'start') {
+          startGame();
+        }
+        if (state !== 'playing') {
+          return;
+        }
+
+        playerSpeedY = CONFIG.player.impulse;
         if (animationFrame === undefined) {
           animationFrame = requestAnimationFrame(drawFrame);
         }
-      }
+      },
+      forceResult(result) {
+        if (!debugMode || (result !== 'fail' && result !== 'win')) {
+          return;
+        }
+        if (state === 'start') {
+          startGame();
+        }
+        finishGame(result, performance.now());
+      },
+      debugMode
     };
+  },
+
+  getVisibleHitbox(image, drawWidth, drawHeight, inset) {
+    // Ignore transparent margins before shrinking the collision rectangle.
+    const pixelCanvas = document.createElement('canvas');
+    pixelCanvas.width = image.naturalWidth;
+    pixelCanvas.height = image.naturalHeight;
+    const pixelContext = pixelCanvas.getContext('2d');
+    if (!pixelContext) {
+      throw new Error('Unable to create a canvas for hitbox detection.');
+    }
+    pixelContext.drawImage(image, 0, 0);
+
+    let left = 0;
+    let top = 0;
+    let right = image.naturalWidth;
+    let bottom = image.naturalHeight;
+
+    try {
+      const pixels = pixelContext.getImageData(0, 0, image.naturalWidth, image.naturalHeight).data;
+      left = image.naturalWidth;
+      top = image.naturalHeight;
+      right = -1;
+      bottom = -1;
+
+      for (let y = 0; y < image.naturalHeight; y += 1) {
+        for (let x = 0; x < image.naturalWidth; x += 1) {
+          if (pixels[(y * image.naturalWidth + x) * 4 + 3] === 0) {
+            continue;
+          }
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x + 1);
+          bottom = Math.max(bottom, y + 1);
+        }
+      }
+
+      if (right < 0 || bottom < 0) {
+        left = 0;
+        top = 0;
+        right = image.naturalWidth;
+        bottom = image.naturalHeight;
+      }
+    } catch (error) {
+      console.warn('Unable to read image pixels; using the full image for hitbox bounds.', error);
+    }
+
+    const scaleX = drawWidth / image.naturalWidth;
+    const scaleY = drawHeight / image.naturalHeight;
+    const visibleX = left * scaleX;
+    const visibleY = top * scaleY;
+    const visibleWidth = (right - left) * scaleX;
+    const visibleHeight = (bottom - top) * scaleY;
+    const insetX = Math.min(inset, Math.max((visibleWidth - 1) / 2, 0));
+    const insetY = Math.min(inset, Math.max((visibleHeight - 1) / 2, 0));
+
+    return {
+      x: visibleX + insetX,
+      y: visibleY + insetY,
+      width: visibleWidth - insetX * 2,
+      height: visibleHeight - insetY * 2
+    };
+  },
+
+  drawDebug(context, playerBox, obstacleHitboxes, scrollX, topLimit, bottomLimit) {
+    context.strokeStyle = CONFIG.debug.playerColor;
+    context.lineWidth = CONFIG.debug.lineWidth;
+    context.strokeRect(playerBox.x, playerBox.y, playerBox.width, playerBox.height);
+    context.strokeStyle = CONFIG.debug.obstacleColor;
+    CONFIG.level.forEach((obstacle, index) => {
+      const hitbox = obstacleHitboxes[index];
+      const x = obstacle.worldX - scrollX + hitbox.x;
+      if (x + hitbox.width <= 0 || x >= CONFIG.stage.width) {
+        return;
+      }
+      context.strokeRect(x, obstacle.y + hitbox.y, hitbox.width, hitbox.height);
+    });
+    context.strokeStyle = CONFIG.debug.playfieldColor;
+    context.strokeRect(0, topLimit, CONFIG.stage.width, bottomLimit - topLimit);
   },
 
   drawBackground(context, backgroundImages) {

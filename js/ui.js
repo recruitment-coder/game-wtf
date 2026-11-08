@@ -19,13 +19,27 @@ const ui = {
       window.visualViewport.addEventListener('resize', resizeStage);
     }
 
+    // Endcards will use this callback in the next stage.
+    const onGameEnd = (result) => {
+      console.log(`Game result: ${result}`);
+    };
+
     // Let pointer and keyboard input trigger the same jump.
-    game.init(canvas).then((gameLoop) => {
+    game.init(canvas, onGameEnd).then((gameLoop) => {
       stage.addEventListener('pointerdown', () => {
         gameLoop.jump();
       });
 
       window.addEventListener('keydown', (event) => {
+        // Debug keys finish the run without playing the whole level.
+        if (gameLoop.debugMode && (event.code === 'KeyW' || event.code === 'KeyF')) {
+          event.preventDefault();
+          if (!event.repeat) {
+            gameLoop.forceResult(event.code === 'KeyW' ? 'win' : 'fail');
+          }
+          return;
+        }
+
         if (event.code !== 'Space' && event.code !== 'Enter') {
           return;
         }
