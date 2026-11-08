@@ -76,8 +76,8 @@ body {
 
 .screen__gesture {
 	position: absolute;
-	left: 149px;
-	top: 450px;
+	left: 147px;
+	top: 451px;
 }
 
 .screen__cta,
@@ -124,7 +124,9 @@ body {
 	border: 0;
 	background: transparent;
 	color: #0b1e49;
-	font: bold 11px Arial, sans-serif;
+	font:
+		bold 11px Arial,
+		sans-serif;
 	cursor: pointer;
 }
 
