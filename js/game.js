@@ -185,6 +185,10 @@ const game = {
     };
 
     return {
+      resetGame() {
+        resetGame();
+        drawStartScreen();
+      },
       jump() {
         const started = state === 'start';
         if (state === 'start') {

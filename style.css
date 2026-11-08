@@ -42,12 +42,98 @@ body {
 	z-index: 2;
 }
 
-.ad__headline {
+.screen {
+	inset: 0;
+	position: absolute;
+	z-index: 3;
+}
+
+.screen[hidden] {
+	display: none;
+}
+
+.screen--fail,
+.screen--win {
+	background: #0b1e49;
+	top: 58px;
+}
+
+.screen__layer {
 	display: block;
 	left: 0;
 	position: absolute;
 	top: 0;
 	height: 640px;
 	width: 360px;
-	z-index: 3;
+	pointer-events: none;
+}
+
+.screen--fail .screen__layer,
+.screen--win .screen__layer {
+	top: -58px;
+}
+
+.screen__gesture {
+	position: absolute;
+	left: 149px;
+	top: 450px;
+}
+
+.screen__cta,
+.screen__replay {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+	border: 0;
+	padding: 0;
+	background: transparent;
+	cursor: pointer;
+	transform-origin: center;
+}
+
+.screen__cta--fail {
+	left: 38.5px;
+	top: 421.75px;
+}
+
+.screen__replay {
+	left: 38.5px;
+	top: 478.75px;
+}
+
+.screen__cta--win {
+	left: 27px;
+	top: 502px;
+}
+
+.screen__cta img,
+.screen__replay img {
+	display: block;
+}
+
+.mute {
+	position: absolute;
+	z-index: 4;
+	top: 7px;
+	right: 4px;
+	min-width: 44px;
+	min-height: 44px;
+	border: 0;
+	background: transparent;
+	color: #0b1e49;
+	font: bold 11px Arial, sans-serif;
+	cursor: pointer;
+}
+
+.mute__icon {
+	font-size: 22px;
+	line-height: 1;
+}
+
+.screen__cta:focus-visible,
+.screen__replay:focus-visible,
+.mute:focus-visible {
+	outline: 3px solid #ff9f90;
+	outline-offset: 2px;
 }
